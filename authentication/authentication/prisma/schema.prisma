@@ -1,0 +1,69 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String     @id @default(auto()) @map("_id") @db.ObjectId
+  firstName      String
+  middleName     String?
+  lastName       String
+  secondLastName String?
+  email          String     @unique
+  phone          String?
+  password       String
+  rolId          String?    @db.ObjectId
+  rol            Rol?       @relation("UserRole", fields: [rolId], references: [id])
+  login          LoginInfo?
+  createdAt      DateTime   @default(now())
+}
+
+model Rol {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  comments  String?
+  roleMenus RolMenu[]
+  users     User[]    @relation("UserRole")
+}
+
+model Menu {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  comments  String?
+  roleMenus RolMenu[]
+}
+
+model RolMenu {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  rol         Rol     @relation(fields: [rolId], references: [id])
+  rolId       String  @db.ObjectId
+  menu        Menu    @relation(fields: [menuId], references: [id])
+  menuId      String  @db.ObjectId
+  canList     Boolean @default(false)
+  canSave     Boolean @default(false)
+  canEdit     Boolean @default(false)
+  canDelete   Boolean @default(false)
+  canDownload Boolean @default(false)
+}
+
+type LoginInfo {
+  code        String?
+  codeStatus  Status    @default(PENDING)
+  codeExpires DateTime?
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
